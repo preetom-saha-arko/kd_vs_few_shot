@@ -79,7 +79,7 @@ def test_multiple_outputs(model, test_loader, device, validation = False):
             all_true.extend(labels.cpu())
             inputs, labels = inputs.to(device), labels.to(device)
             
-            _, outputs = model(inputs) # Disregard the first tensor of the tuple
+            outputs = model(inputs) # Disregard the first tensor of the tuple
             _, predicted = torch.max(outputs.data, 1)
             all_pred.extend(predicted.cpu())
             # print("predicted.shape =", predicted.shape)
