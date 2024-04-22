@@ -79,7 +79,7 @@ def test_multiple_outputs(model, test_loader, device, validation = False):
             all_true.extend(labels.cpu())
             inputs, labels = inputs.to(device), labels.to(device)
             
-            outputs = model(inputs) # Disregard the first tensor of the tuple
+            outputs = model(inputs) 
             _, predicted = torch.max(outputs.data, 1)
             all_pred.extend(predicted.cpu())
             # print("predicted.shape =", predicted.shape)
@@ -186,12 +186,24 @@ def train_model(model, criterion, optimizer, train_loader, val_loader, epochs, d
     return train_loss_list, val_loss_list, train_accuracy_list, val_accuracy_list
 
 # Train and test the lightweight network with cross entropy loss
-num_epochs = 50
+num_epochs = 20
 criterion = nn.CrossEntropyLoss()
-optimizer = optim.Adam(model.parameters(), lr=0.0001)
+optimizer = optim.Adam(model.parameters(), lr=0.00001)
 
 
 train_loss_list, val_loss_list, train_accuracy_list, val_accuracy_list = train_model(model, criterion, optimizer, train_dataloader, val_dataloader, num_epochs, device)
+
+with open("train_loss.txt", "w") as fout:
+    print(*train_loss_list, sep="\n", file=fout)
+    
+with open("val_loss.txt", "w") as fout:
+    print(*val_loss_list, sep="\n", file=fout)
+    
+with open("train_accuracy.txt", "w") as fout:
+    print(*train_accuracy_list, sep="\n", file=fout)
+    
+with open("val_accuracy.txt", "w") as fout:
+    print(*val_accuracy_list, sep="\n", file=fout)
 
 import matplotlib.pyplot as plt
 
