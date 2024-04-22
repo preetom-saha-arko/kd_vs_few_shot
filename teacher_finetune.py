@@ -156,6 +156,7 @@ def train_model(model, criterion, optimizer, train_loader, val_loader, epochs, d
 
         with torch.no_grad():
             for val_inputs, val_labels in tqdm(val_loader):
+                val_labels = val_labels.type(torch.LongTensor).squeeze(1)
                 val_inputs, val_labels = val_inputs.to(device), val_labels.to(device)
 
                 val_outputs = model(val_inputs)
