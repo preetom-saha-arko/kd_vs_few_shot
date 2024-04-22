@@ -74,7 +74,7 @@ def test_multiple_outputs(model, test_loader, device, validation = False):
     all_pred = []
     
     with torch.no_grad():
-        for inputs, labels in test_loader:
+        for inputs, labels in tqdm(test_loader):
             labels = labels.squeeze(1)
             all_true.extend(labels.cpu())
             inputs, labels = inputs.to(device), labels.to(device)
@@ -113,6 +113,8 @@ def train_model(model, criterion, optimizer, train_loader, val_loader, epochs, d
     val_loss_list = []
     train_accuracy_list = []
     val_accuracy_list = []
+    best_val_loss = float('inf')
+    best_model = None
 
     for epoch in range(epochs):
         model.train()  # Set the model to training mode
@@ -120,14 +122,18 @@ def train_model(model, criterion, optimizer, train_loader, val_loader, epochs, d
         correct = 0
         total = 0
 
-        for inputs, labels in train_loader:
+        for inputs, labels in tqdm(train_loader):
+            labels = labels.type(torch.LongTensor)
             inputs, labels = inputs.to(device), labels.to(device)
+            labels = labels.squeeze(1)
 
             # Zero the parameter gradients
             optimizer.zero_grad()
 
             # Forward pass
             outputs = model(inputs)
+            # print("outputs.shape", outputs.shape)
+            # print("labels.shape", labels.shape)
             loss = criterion(outputs, labels)
 
             # Backward pass and optimize
@@ -149,7 +155,7 @@ def train_model(model, criterion, optimizer, train_loader, val_loader, epochs, d
         val_total = 0
 
         with torch.no_grad():
-            for val_inputs, val_labels in val_loader:
+            for val_inputs, val_labels in tqdm(val_loader):
                 val_inputs, val_labels = val_inputs.to(device), val_labels.to(device)
 
                 val_outputs = model(val_inputs)
@@ -162,6 +168,11 @@ def train_model(model, criterion, optimizer, train_loader, val_loader, epochs, d
 
         val_accuracy = 100 * val_correct / val_total
         val_loss = val_running_loss / len(val_loader)
+        
+        if val_loss < best_val_loss:
+            best_val_loss = val_loss
+            best_model = model
+            # torch.save(model, 'finetuned_model.pth')
 
         print(f"Epoch {epoch+1}/{epochs}, Train Loss: {train_loss}, Train Accuracy: {train_accuracy}, Val Loss: {val_loss}, Val Accuracy: {val_accuracy}")
         
@@ -170,11 +181,11 @@ def train_model(model, criterion, optimizer, train_loader, val_loader, epochs, d
         train_accuracy_list.append(train_accuracy)
         val_accuracy_list.append(val_accuracy)
         
-    torch.save(model, 'finetuned_model.pth')
+    torch.save(best_model, 'finetuned_model.pth')
     return train_loss_list, val_loss_list, train_accuracy_list, val_accuracy_list
 
 # Train and test the lightweight network with cross entropy loss
-num_epochs = 10
+num_epochs = 50
 criterion = nn.CrossEntropyLoss()
 optimizer = optim.Adam(model.parameters(), lr=0.0001)
 
@@ -221,9 +232,6 @@ plt.ylabel('Accuracy')
 plt.savefig('val_accuracy.png')
 # plt.show()
 
-# model = torch.load('finetuned_model.pth')
+model = torch.load('finetuned_model.pth')
 
 test_accuracy, test_f1 = test_multiple_outputs(model, test_dataloader, device)
- 
- 
-    
